@@ -3,11 +3,12 @@
 
 #include "AT91SAM7SELib.h"
 
-void aic_handler(void) {
+void usart0_handler(void) {
   if ((AT91C_BASE_US0->US_CSR & AT91C_US_RXRDY) == AT91C_US_RXRDY) {
     unsigned int data;
     data = AT91C_BASE_US0->US_RHR;
 
+#if 0
     switch (data) {
       case 'a':
       case  28: //left arrow
@@ -28,6 +29,7 @@ void aic_handler(void) {
       default:
         ; // dbg: printf("def: %d\n", data);
     }
+#endif
   } // if AT91C_US_RXRDY
 }
 
@@ -36,6 +38,7 @@ void usart1_handler(void) {
     unsigned int data;
     data = AT91C_BASE_US1->US_RHR;
 
+#if 0
     if (data >= '0' && data <= '9') {
       unsigned int now   = getRTCVal();
       unsigned int alarm = now + ((data - '0') * 10);
@@ -70,6 +73,7 @@ void usart1_handler(void) {
       default:
         ; // dbg: printf("def: %d\n", data);
     }
+#endif
   } // if
 }
 
@@ -90,7 +94,7 @@ void ConfigureUsart0( void ) {
   /* AIC */
   AIC_Init();
   AIC_DisableIT(AT91C_ID_US0);
-  AIC_ConfigureIT(AT91C_ID_US0, 0, aic_handler);
+  AIC_ConfigureIT(AT91C_ID_US0, 0, usart0_handler);
   AIC_EnableIT(AT91C_ID_US0);
   /* AIC (end) */
 
@@ -172,11 +176,20 @@ void ConfigurePIOB_Interrupts( void ) {
 }
 
 void sys_aic_handler( void ) {
+  float a;
+  uint8_t *c = (uint8_t *) &a;
   unsigned int status = AT91C_BASE_RTTC->RTTC_RTSR;
   if (status & AT91C_RTTC_RTTINC) {
-    printf("%d\n", getRTCVal());
-  }
+    USART_write(AT91C_BASE_US0, 1);
 
+    *c++ = USART_read(AT91C_BASE_US0);
+    *c++ = USART_read(AT91C_BASE_US0);
+    *c++ = USART_read(AT91C_BASE_US0);
+    *c++ = USART_read(AT91C_BASE_US0);
+    
+    printf("%f\n", a);
+  }
+#if 0
   if (status & AT91C_RTTC_ALMS) {
     unsigned int now = getRTCVal();
     printf("!!!!alarm now at %d!!!!\n", now);
@@ -184,6 +197,7 @@ void sys_aic_handler( void ) {
       blinkenlights(AT91B_POWERLED, 100, 1);
     }
   }
+#endif
 }
 
 void setupRTC( void ) {
