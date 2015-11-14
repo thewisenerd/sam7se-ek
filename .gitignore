@@ -1,0 +1,15 @@
+*.iex
+*.crf
+*.d
+*.o
+*.axf
+*.build_*
+*.htm
+*.lnp
+*.map
+*.sct
+*.uvgui*
+*.uvopt
+*.dep
+*.bak
+*.lst
