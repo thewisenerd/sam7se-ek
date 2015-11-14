@@ -182,6 +182,8 @@ int main(void) {
   ConfigureUsart0(); // configure usart0
 
   ConfigureUsart1(); // configure usart1
+  set_printf_us(AT91C_BASE_US1);
+  set_scanf_us(AT91C_BASE_US1);
 
   ConfigurePIOB_Interrupts();
 

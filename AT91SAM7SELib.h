@@ -60,6 +60,13 @@ void    USART_DisableInterrupts(AT91S_USART *usart, unsigned int filter);
 void    USART_EnableInterrupts(AT91S_USART *usart, unsigned int filter);
 /* u(s)art functions (end) */
 
+/* u(s)art helpers */
+extern AT91S_USART  *_usart_in_device;
+extern AT91S_USART *_usart_out_device;
+void set_printf_us(AT91S_USART *usart);
+void  set_scanf_us(AT91S_USART *usart);
+/* u(s)art helpers (end) */
+
 /* rtc */
 unsigned int getRTCVal( void );
 void         resetRTC( uint8_t resolution, unsigned int filter );

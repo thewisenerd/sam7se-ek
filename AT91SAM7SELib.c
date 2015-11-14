@@ -8,6 +8,9 @@
 
 #include "AT91SAM7SELib.h"
 
+AT91S_USART  *_usart_in_device = AT91C_BASE_US0;
+AT91S_USART *_usart_out_device = AT91C_BASE_US0;
+
 void delay_ms(unsigned int n)
 {
   unsigned int i = MY_OSC_2 * n;
@@ -44,7 +47,7 @@ void blinkenlights(uint8_t LED, size_t delay, size_t n)
 signed int fgetc(FILE *pStream)
 {
   if (pStream == stdin) {
-    return USART_read(AT91C_BASE_US1);
+    return USART_read(_usart_in_device);
   } else {
     return EOF;
   }
@@ -53,7 +56,7 @@ signed int fgetc(FILE *pStream)
 signed int fputc(signed int c, FILE *pStream)
 {
   if ((pStream == stdout) || (pStream == stderr)) {
-    USART_write(AT91C_BASE_US1, c);
+    USART_write(_usart_out_device, c);
     return c;
   } else {
     return EOF;
@@ -77,7 +80,7 @@ char* fgets(char *str, int size, FILE *pStream)
 {
   if (pStream == stdin) {
     while (size--) {
-      *str++ = USART_read(AT91C_BASE_US1);
+      *str++ = USART_read(_usart_in_device);
     }
     return str;
   } else {
@@ -213,6 +216,13 @@ void USART_EnableInterrupts(AT91S_USART *usart, unsigned int filter)
 {
   usart->US_IER = filter; 
 }
+
+void set_printf_us(AT91S_USART *usart) {
+  _usart_out_device = usart;
+}
+void  set_scanf_us(AT91S_USART *usart) {
+  _usart_in_device = usart;
+}
 /* USART (end) */
 
 /* rtc */
@@ -225,7 +235,7 @@ void resetRTC( uint8_t resolution, unsigned int filter ) {
   AT91C_BASE_RTTC->RTTC_RTMR = (1 << resolution) | AT91C_RTTC_RTTRST;
 }
 
-void setRTCAlarm ( unsigned int time )
+void setRTCAlarm( unsigned int time )
 {
   AT91C_BASE_RTTC->RTTC_RTAR = time - 1;
   //pRtt->RTTC_RTAR = - 1;   
