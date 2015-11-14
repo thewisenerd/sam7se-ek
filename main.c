@@ -37,9 +37,16 @@ void usart1_handler(void) {
     data = AT91C_BASE_US1->US_RHR;
 
     if (data >= '0' && data <= '9') {
-      unsigned int alarm = getRTCVal() + ((data - '0') * 10);
-      printf("alarm set at: %ds\n", alarm);
-      setRTCAlarm(alarm);
+      unsigned int now   = getRTCVal();
+      unsigned int alarm = now + ((data - '0') * 10);
+      if (alarm == now) {
+        alarm = 0xFFFFFFFF;
+        setRTCAlarm(alarm);
+        printf("alarm cancelled!\n");
+      } else {
+        setRTCAlarm(alarm);
+        printf("alarm set at: %ds\n", alarm);
+      }
       return;
     }
 
