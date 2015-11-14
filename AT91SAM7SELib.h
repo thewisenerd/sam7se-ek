@@ -70,4 +70,6 @@ void  set_scanf_us(AT91S_USART *usart);
 /* rtc */
 unsigned int getRTCVal( void );
 void         resetRTC( uint8_t resolution, unsigned int filter );
+void         setRTCMode(unsigned int filter);
+void         setRTCAlarm( unsigned int time );
 /* rtc (end) */

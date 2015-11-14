@@ -227,17 +227,20 @@ void  set_scanf_us(AT91S_USART *usart) {
 
 /* rtc */
 unsigned int getRTCVal( void ) {
-  return AT91C_BASE_RTTC->RTTC_RTVR;
+  return AT91C_BASE_SYS->RTTC_RTVR;
 }
 
 void resetRTC( uint8_t resolution, unsigned int filter ) {
   // reset with 1s resolution
-  AT91C_BASE_RTTC->RTTC_RTMR = (1 << resolution) | AT91C_RTTC_RTTRST;
+  AT91C_BASE_SYS->RTTC_RTMR = (1 << resolution) | filter | AT91C_RTTC_RTTRST;
+}
+
+void setRTCMode(unsigned int filter) {
+  AT91C_BASE_SYS->RTTC_RTMR = filter;
 }
 
 void setRTCAlarm( unsigned int time )
 {
   AT91C_BASE_RTTC->RTTC_RTAR = time - 1;
-  //pRtt->RTTC_RTAR = - 1;   
 }   
 /* rtc (end) */

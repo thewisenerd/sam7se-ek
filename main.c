@@ -36,6 +36,13 @@ void usart1_handler(void) {
     unsigned int data;
     data = AT91C_BASE_US1->US_RHR;
 
+    if (data >= '0' && data <= '9') {
+      unsigned int alarm = getRTCVal() + ((data - '0') * 10);
+      printf("alarm set at: %ds\n", alarm);
+      setRTCAlarm(alarm);
+      return;
+    }
+
     switch (data) {
       case 'a':
       case  28: //left arrow
@@ -99,7 +106,7 @@ void ConfigureUsart1(void) {
   USART_EnableInterrupts(AT91C_BASE_US1, AT91C_US_RXRDY); // send rxrdy interrupt
 
   /* AIC */
-  AIC_Init();
+  //AIC_Init();
   AIC_DisableIT(AT91C_ID_US1);
   AIC_ConfigureIT(AT91C_ID_US1, 0, usart1_handler);
   AIC_EnableIT(AT91C_ID_US1);
@@ -157,10 +164,28 @@ void ConfigurePIOB_Interrupts( void ) {
   /* AIC (end) */
 }
 
+void sys_aic_handler( void ) {
+  unsigned int status = AT91C_BASE_RTTC->RTTC_RTSR;
+  if (status & AT91C_RTTC_RTTINC) {
+    printf("%d\n", getRTCVal());
+  }
+
+  if (status & AT91C_RTTC_ALMS) {
+    unsigned int now = getRTCVal();
+    printf("!!!!alarm now at %d!!!!\n", now);
+    while ((getRTCVal() - now) < 10) {
+      blinkenlights(AT91B_POWERLED, 100, 1);
+    }
+  }
+}
+
 void setupRTC( void ) {
   // 1s resolution, increment interrupt, alarm interrupt!
   resetRTC(15, (AT91C_RTTC_RTTINCIEN | AT91C_RTTC_ALMIEN));
-  //setRTCAlarm(300);
+
+  AIC_DisableIT(AT91C_ID_SYS);
+  AIC_ConfigureIT(AT91C_ID_SYS, 0, sys_aic_handler);
+  AIC_EnableIT(AT91C_ID_SYS);
 }
 
 int main(void) {
@@ -190,10 +215,7 @@ int main(void) {
   setupRTC();
 
   // infinity
-  while (1) {
-    printf("%d\n", getRTCVal());
-    delay_ms(1000);
-  }
+  while (1);
 
   ; // return 0; /* statement unreachable as-is */
 }
