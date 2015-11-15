@@ -25,33 +25,17 @@ unsigned char USART_ReadBuffer(AT91S_USART *usart, void *buffer, unsigned int si
 }
 
 void usart0_handler(void) {
+  unsigned int status = AT91C_BASE_US0->US_CSR;
   if ((AT91C_BASE_US0->US_CSR & AT91C_US_ENDRX) == AT91C_US_ENDRX) {
-    USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
-    printf("%f\n", values[0]);
+    AT91C_BASE_US0->US_IDR = AT91C_US_ENDRX;
+    printf("b\n");
+  }
 
-#if 0
-    switch (data) {
-      case 'a':
-      case  28: //left arrow
-        printf("left\n");
-        break;
-      case 'd':
-      case  29: //right arrow
-      printf("right\n");
-        break;
-      case 'w':
-      case  30: //left arrow
-        printf("up\n");
-        break;
-      case 's':
-      case  31: //left arrow
-        printf("down\n");
-        break;
-      default:
-        ; // dbg: printf("def: %d\n", data);
-    }
-#endif
-  } // if AT91C_US_RXRDY
+  if ((AT91C_BASE_US0->US_CSR & AT91C_US_RXRDY) == AT91C_US_RXRDY) {
+    printf("a\n");
+    USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
+    AT91C_BASE_US0->US_IER = AT91C_US_ENDRX;
+  }
 }
 
 void usart1_handler(void) {
@@ -110,7 +94,7 @@ void ConfigureUsart0( void ) {
   USART_SetTransmitterTimeguard(AT91C_BASE_US0, 0);       //transmit timeguard: inf
 
   USART_DisableInterrupts(AT91C_BASE_US0, 0xFFFFFFFF);    // disable all interrupts
-  USART_EnableInterrupts(AT91C_BASE_US0, AT91C_US_ENDRX); // send rxrdy interrupt
+  USART_EnableInterrupts(AT91C_BASE_US0, (AT91C_US_RXRDY | AT91C_US_ENDRX)); // send rxrdy interrupt
 
   /* AIC */
   AIC_Init();
@@ -204,8 +188,7 @@ void sys_aic_handler( void ) {
   unsigned int status = AT91C_BASE_RTTC->RTTC_RTSR;
   uint8_t ret;
   if (status & AT91C_RTTC_RTTINC) {
-    //blinkenlights(AT91B_POWERLED, 200, 1);
-    printf("%d\n", getRTCVal());
+    blinkenlights(AT91B_POWERLED, 200, 1);
     USART_write(AT91C_BASE_US0, 1);
   }
 #if 0
@@ -248,7 +231,6 @@ int main(void) {
   ConfigureUsart1(); // configure usart1
   set_printf_us(AT91C_BASE_US1);
   set_scanf_us(AT91C_BASE_US1);
-  printf("hey\n");
   
   ConfigureUsart0(); // configure usart0
 
