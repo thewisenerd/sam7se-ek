@@ -3,11 +3,37 @@
 
 #include "AT91SAM7SELib.h"
 
+#define MAX_BUF 100
+float values[MAX_BUF] = {0};
+float *ptr = &values[0];
+
+unsigned char USART_ReadBuffer(AT91S_USART *usart, void *buffer, unsigned int size)
+{
+  // Check if the first PDC bank is free
+  if ((usart->US_RCR == 0) && (usart->US_RNCR == 0)) {
+    usart->US_RPR = (unsigned int) buffer;
+    usart->US_RCR = size;
+    usart->US_PTCR = AT91C_PDC_RXTEN;
+    return 1;
+  } else if (usart->US_RNCR == 0) {  // Check if the second PDC bank is free
+    usart->US_RNPR = (unsigned int) buffer;
+    usart->US_RNCR = size;
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 void usart0_handler(void) {
   if ((AT91C_BASE_US0->US_CSR & AT91C_US_RXRDY) == AT91C_US_RXRDY) {
-    unsigned int data;
-    data = AT91C_BASE_US0->US_RHR;
+    uint8_t ret = USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
+    while (ret == 0) {
+      USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
+    }
 
+    while (!((AT91C_BASE_US0->US_RCR == 0) && (AT91C_BASE_US0->US_RNCR == 0)));
+    
+    printf("%f\n", values[0]);
 #if 0
     switch (data) {
       case 'a':
@@ -181,13 +207,6 @@ void sys_aic_handler( void ) {
   unsigned int status = AT91C_BASE_RTTC->RTTC_RTSR;
   if (status & AT91C_RTTC_RTTINC) {
     USART_write(AT91C_BASE_US0, 1);
-
-    *c++ = USART_read(AT91C_BASE_US0);
-    *c++ = USART_read(AT91C_BASE_US0);
-    *c++ = USART_read(AT91C_BASE_US0);
-    *c++ = USART_read(AT91C_BASE_US0);
-    
-    printf("%f\n", a);
   }
 #if 0
   if (status & AT91C_RTTC_ALMS) {
