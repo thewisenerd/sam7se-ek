@@ -172,7 +172,6 @@ uint8_t USART_read(AT91S_USART *usart)
 
 size_t USART_write(AT91S_USART *usart, uint8_t c)
 {
-  enable_led(USART_TX_LED);
   while ((usart->US_CSR & AT91C_US_TXRDY) == 0); // while !txrdy, wait.
 
   usart->US_THR = c;
@@ -222,6 +221,18 @@ void set_printf_us(AT91S_USART *usart) {
 }
 void  set_scanf_us(AT91S_USART *usart) {
   _usart_in_device = usart;
+}
+
+bool USART_PDC_RxStatus(AT91S_USART *usart) {
+  if ((usart->US_RCR == 0) || (usart->US_RNCR == 0))
+    return true;
+  return false;
+}
+
+bool USART_PDC_TxStatus(AT91S_USART *usart) {
+  if ((usart->US_TCR == 0) || (usart->US_TNCR == 0))
+    return true;
+  return false;
 }
 /* USART (end) */
 

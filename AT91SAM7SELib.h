@@ -10,6 +10,7 @@
 #include "AT91SAM7SE-EK.h"           /* AT91SAM7SE-EK board definitions    */
 
 #include <stdio.h>
+#include <stdbool.h>
 
 #define uint8_t unsigned char
 #define uint    unsigned int
@@ -58,6 +59,8 @@ void    USART_SetRecieverTimeout(AT91S_USART *usart, unsigned int timeout);
 void    USART_SetTransmitterTimeguard(AT91S_USART *usart, unsigned int timeguard);
 void    USART_DisableInterrupts(AT91S_USART *usart, unsigned int filter);
 void    USART_EnableInterrupts(AT91S_USART *usart, unsigned int filter);
+bool    USART_PDC_RxStatus(AT91S_USART *usart);
+bool    USART_PDC_TxStatus(AT91S_USART *usart);
 /* u(s)art functions (end) */
 
 /* u(s)art helpers */

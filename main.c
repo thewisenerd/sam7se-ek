@@ -25,15 +25,10 @@ unsigned char USART_ReadBuffer(AT91S_USART *usart, void *buffer, unsigned int si
 }
 
 void usart0_handler(void) {
-  if ((AT91C_BASE_US0->US_CSR & AT91C_US_RXRDY) == AT91C_US_RXRDY) {
-    uint8_t ret = USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
-    while (ret == 0) {
-      USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
-    }
-
-    while (!((AT91C_BASE_US0->US_RCR == 0) && (AT91C_BASE_US0->US_RNCR == 0)));
-    
+  if ((AT91C_BASE_US0->US_CSR & AT91C_US_ENDRX) == AT91C_US_ENDRX) {
+    USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
     printf("%f\n", values[0]);
+
 #if 0
     switch (data) {
       case 'a':
@@ -115,13 +110,15 @@ void ConfigureUsart0( void ) {
   USART_SetTransmitterTimeguard(AT91C_BASE_US0, 0);       //transmit timeguard: inf
 
   USART_DisableInterrupts(AT91C_BASE_US0, 0xFFFFFFFF);    // disable all interrupts
-  USART_EnableInterrupts(AT91C_BASE_US0, AT91C_US_RXRDY); // send rxrdy interrupt
+  USART_EnableInterrupts(AT91C_BASE_US0, AT91C_US_ENDRX); // send rxrdy interrupt
 
   /* AIC */
   AIC_Init();
+
   AIC_DisableIT(AT91C_ID_US0);
   AIC_ConfigureIT(AT91C_ID_US0, 0, usart0_handler);
   AIC_EnableIT(AT91C_ID_US0);
+
   /* AIC (end) */
 
   USART_SetReceiverEnabled(AT91C_BASE_US0, 1);
@@ -143,11 +140,13 @@ void ConfigureUsart1(void) {
   USART_EnableInterrupts(AT91C_BASE_US1, AT91C_US_RXRDY); // send rxrdy interrupt
 
   /* AIC */
+/*
   //AIC_Init();
   AIC_DisableIT(AT91C_ID_US1);
   AIC_ConfigureIT(AT91C_ID_US1, 0, usart1_handler);
   AIC_EnableIT(AT91C_ID_US1);
-  /* AIC (end) */
+*/
+/* AIC (end) */
 
   USART_SetReceiverEnabled(AT91C_BASE_US1, 1);
   USART_SetTransmitterEnabled(AT91C_BASE_US1, 1);
@@ -202,10 +201,11 @@ void ConfigurePIOB_Interrupts( void ) {
 }
 
 void sys_aic_handler( void ) {
-  float a;
-  uint8_t *c = (uint8_t *) &a;
   unsigned int status = AT91C_BASE_RTTC->RTTC_RTSR;
+  uint8_t ret;
   if (status & AT91C_RTTC_RTTINC) {
+    //blinkenlights(AT91B_POWERLED, 200, 1);
+    printf("%d\n", getRTCVal());
     USART_write(AT91C_BASE_US0, 1);
   }
 #if 0
@@ -221,11 +221,12 @@ void sys_aic_handler( void ) {
 
 void setupRTC( void ) {
   // 1s resolution, increment interrupt, alarm interrupt!
-  resetRTC(15, (AT91C_RTTC_RTTINCIEN | AT91C_RTTC_ALMIEN));
+  resetRTC(15, (AT91C_RTTC_RTTINCIEN));
 
   AIC_DisableIT(AT91C_ID_SYS);
   AIC_ConfigureIT(AT91C_ID_SYS, 0, sys_aic_handler);
   AIC_EnableIT(AT91C_ID_SYS);
+  blinkenlights(AT91B_POWERLED, 200, 1);
 }
 
 int main(void) {
@@ -244,15 +245,19 @@ int main(void) {
   AT91C_BASE_PIOA->PIO_CODR = AT91B_POWERLED;
   /* enable output on leds (end) */
 
-  ConfigureUsart0(); // configure usart0
-
   ConfigureUsart1(); // configure usart1
   set_printf_us(AT91C_BASE_US1);
   set_scanf_us(AT91C_BASE_US1);
+  printf("hey\n");
+  
+  ConfigureUsart0(); // configure usart0
 
-  ConfigurePIOB_Interrupts();
+  //ConfigurePIOB_Interrupts();
 
   setupRTC();
+
+  /*ret = */USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
+
 
   // infinity
   while (1);
