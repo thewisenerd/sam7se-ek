@@ -172,8 +172,8 @@ uint8_t USART_read(AT91S_USART *usart)
 
 size_t USART_write(AT91S_USART *usart, uint8_t c)
 {
+  enable_led(USART_TX_LED);
   while ((usart->US_CSR & AT91C_US_TXRDY) == 0); // while !txrdy, wait.
-
   usart->US_THR = c;
   while ((usart->US_CSR & AT91C_US_TXRDY) == 0); // while !txrdy, wait.
   disable_led(USART_TX_LED);
