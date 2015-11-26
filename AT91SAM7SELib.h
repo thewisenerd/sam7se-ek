@@ -15,6 +15,10 @@
 #define uint8_t unsigned char
 #define uint    unsigned int
 
+/* from kernel tree; include/linux/compiler.h */
+# define likely(x)       __builtin_expect(!!(x), 1)
+# define unlikely(x)     __builtin_expect(!!(x), 0)
+
 #define BOARD_MCK 48000000
 #define MY_OSC_2  5000      // iterations for 1ms delay (approx)
 
