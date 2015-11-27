@@ -15,6 +15,8 @@
 #define uint8_t unsigned char
 #define uint    unsigned int
 
+#define USART_DMA
+
 /* from kernel tree; include/linux/compiler.h */
 # define likely(x)       __builtin_expect(!!(x), 1)
 # define unlikely(x)     __builtin_expect(!!(x), 0)
@@ -55,6 +57,7 @@ void AIC_Init( void );
 
 /* u(s)art functions */
 void    USART_Configure(AT91S_USART *usart, uint mode, uint baudrate, uint masterClock);
+#ifndef USART_DMA
 uint8_t USART_read(AT91S_USART *usart);
 size_t  USART_write(AT91S_USART *usart, uint8_t c);
 void    USART_SetTransmitterEnabled(AT91S_USART *usart, uint8_t enabled);
@@ -65,6 +68,7 @@ void    USART_DisableInterrupts(AT91S_USART *usart, unsigned int filter);
 void    USART_EnableInterrupts(AT91S_USART *usart, unsigned int filter);
 bool    USART_PDC_RxStatus(AT91S_USART *usart);
 bool    USART_PDC_TxStatus(AT91S_USART *usart);
+#endif
 /* u(s)art functions (end) */
 
 /* u(s)art helpers */

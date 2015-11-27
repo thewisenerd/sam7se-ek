@@ -44,6 +44,7 @@ void blinkenlights(uint8_t LED, size_t delay, size_t n)
 }
 
 /* stdlib overwrites */
+#ifndef USART_DMA
 signed int fgetc(FILE *pStream)
 {
   if (pStream == stdin) {
@@ -92,6 +93,7 @@ int ferror(FILE *f)
 {
   return EOF;
 }
+#endif
 /* stdlib overwrites (end) */
 
 /* pmc */
@@ -162,6 +164,7 @@ void USART_Configure(AT91S_USART *usart, uint mode, uint baudrate, uint masterCl
   usart->US_BRGR = (masterClock / baudrate) / 16;
 }
 
+#ifndef USART_DMA
 uint8_t USART_read(AT91S_USART *usart)
 {
   enable_led(USART_RX_LED);
@@ -234,6 +237,7 @@ bool USART_PDC_TxStatus(AT91S_USART *usart) {
     return true;
   return false;
 }
+#endif
 /* USART (end) */
 
 /* rtc */

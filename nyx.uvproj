@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>Target 1</TargetName>
+      <TargetName>nyx</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <TargetOption>
@@ -403,27 +403,52 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>Source Group 1</GroupName>
+          <GroupName>AT91SAM7SELib</GroupName>
           <Files>
             <File>
-              <FileName>SAM7.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\SAM7.s</FilePath>
+              <FileName>AT91SAM7SELib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\AT91SAM7SELib.c</FilePath>
             </File>
             <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\main.c</FilePath>
+              <FileName>AT91SAM7SELib.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\AT91SAM7SELib.h</FilePath>
             </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>core_headers</GroupName>
+          <Files>
             <File>
               <FileName>AT91SAM7SE512.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\AT91SAM7SE512.h</FilePath>
             </File>
             <File>
-              <FileName>AT91SAM7SELib.c</FileName>
+              <FileName>AT91SAM7SE-EK.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\AT91SAM7SE-EK.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>boot</GroupName>
+          <Files>
+            <File>
+              <FileName>SAM7.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\SAM7.s</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>main</GroupName>
+          <Files>
+            <File>
+              <FileName>dma_charbuf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\AT91SAM7SELib.c</FilePath>
+              <FilePath>.\DMA\dma_charbuf.c</FilePath>
             </File>
           </Files>
         </Group>
