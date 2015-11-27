@@ -8,8 +8,22 @@
 
 #include "AT91SAM7SELib.h"
 
-AT91S_USART  *_usart_in_device = AT91C_BASE_US0;
-AT91S_USART *_usart_out_device = AT91C_BASE_US0;
+AT91S_USART  *__usart_in_device   = AT91C_BASE_US0;
+AT91S_USART  *__usart_out_device = AT91C_BASE_US0;
+
+#ifdef USART_DMA
+#define MAX_CHARBUF 100
+char __us0_rxbuf[MAX_CHARBUF + 1] = {0};
+char *__us0_rx_ptr = __us0_rxbuf;
+char *__us0_buf_head = __us0_rxbuf;
+
+char __us1_rxbuf[MAX_CHARBUF + 1] = {0};
+char *__us1_rx_ptr = __us0_rxbuf;
+char *__us1_buf_head = __us1_rxbuf;
+
+uint8_t __init_us0_endrx_irq = 0;
+uint8_t __init_us1_endrx_irq = 0;
+#endif
 
 void delay_ms(unsigned int n)
 {
@@ -47,7 +61,7 @@ void blinkenlights(uint8_t LED, size_t delay, size_t n)
 signed int fgetc(FILE *pStream)
 {
   if (pStream == stdin) {
-    return USART_read(_usart_in_device);
+    return USART_read(__usart_in_device);
   } else {
     return EOF;
   }
@@ -56,7 +70,7 @@ signed int fgetc(FILE *pStream)
 signed int fputc(signed int c, FILE *pStream)
 {
   if ((pStream == stdout) || (pStream == stderr)) {
-    USART_write(_usart_out_device, c);
+    USART_write(__usart_out_device, &c, 1);
     return c;
   } else {
     return EOF;
@@ -66,6 +80,7 @@ signed int fputc(signed int c, FILE *pStream)
 signed int fputs(const char *pStr, FILE *pStream)
 {
   signed int num = 0;
+  //return USART_WriteBuffer(__usart_out_device, pStr, strlen(
   while (*pStr != 0) {
     if (fputc(*pStr, pStream) == -1) {
       return -1;
@@ -80,7 +95,7 @@ char* fgets(char *str, int size, FILE *pStream)
 {
   if (pStream == stdin) {
     while (size--) {
-      *str++ = USART_read(_usart_in_device);
+      *str++ = USART_read(__usart_in_device);
     }
     return str;
   } else {
@@ -154,7 +169,6 @@ void AIC_Init( void )
 void USART_Configure(AT91S_USART *usart, uint mode, uint baudrate, uint masterClock) {
   // Reset and disable receiver & transmitter
   usart->US_CR = AT91C_US_RSTRX | AT91C_US_RSTTX | AT91C_US_RXDIS | AT91C_US_TXDIS;
-
   // Configure mode
   usart->US_MR = mode;
 
@@ -162,23 +176,108 @@ void USART_Configure(AT91S_USART *usart, uint mode, uint baudrate, uint masterCl
   usart->US_BRGR = (masterClock / baudrate) / 16;
 }
 
-uint8_t USART_read(AT91S_USART *usart)
+int USART_read(AT91S_USART *usart)
 {
+  while (USART_PDC_RxStatus(usart) == false) ;
+#ifdef USART_DMA
+  if (usart == AT91C_BASE_US0) {
+    if (__us0_buf_head == &__us0_rxbuf[MAX_CHARBUF]) {
+      __us0_buf_head = __us0_rx_ptr;
+    }
+    if (__us0_buf_head == __us0_rx_ptr) {
+      return EOF;
+    }
+    return *__us0_buf_head++;
+  } else if (usart == AT91C_BASE_US1) {
+    if (__us1_buf_head == &__us1_rxbuf[MAX_CHARBUF]) {
+      __us1_buf_head = __us1_rx_ptr;
+    }
+    if (__us1_buf_head == __us1_rx_ptr) {
+      return EOF;
+    }
+    return *__us1_buf_head++;
+  } else {
+    return EOF;
+  }
+#else
   enable_led(USART_RX_LED);
   while ((usart->US_CSR & AT91C_US_RXRDY) == 0); // while !rxrdy, wait.
   disable_led(USART_RX_LED);
   return usart->US_RHR;
+#endif // USART_DMA
 }
 
-size_t USART_write(AT91S_USART *usart, uint8_t c)
+int USART_write(AT91S_USART *usart, int *c, int size)
 {
+#ifdef USART_DMA
+  // TODO: get a stack going on here
+  while (USART_PDC_TxStatus(usart) == false) ; // wait till tx ready?
+  return USART_WriteBuffer(usart, c, size);
+#else
   enable_led(USART_TX_LED);
   while ((usart->US_CSR & AT91C_US_TXRDY) == 0); // while !txrdy, wait.
-  usart->US_THR = c;
+  usart->US_THR = *c;
   while ((usart->US_CSR & AT91C_US_TXRDY) == 0); // while !txrdy, wait.
   disable_led(USART_TX_LED);
   return 1;
+#endif // USART_DMA
 }
+
+int USART_ReadBuffer(AT91S_USART *usart, void *buffer, unsigned int size)
+{
+  // Check if the first PDC bank is free
+  if ((usart->US_RCR == 0) && (usart->US_RNCR == 0)) {
+    usart->US_RPR = (unsigned int) buffer;
+    usart->US_RCR = size;
+    usart->US_PTCR = AT91C_PDC_RXTEN;
+    return size;
+  } else if (usart->US_RNCR == 0) {  // Check if the second PDC bank is free
+    usart->US_RNPR = (unsigned int) buffer;
+    usart->US_RNCR = size;
+    return size;
+  } else {
+    return -1;
+  }
+}
+int USART_WriteBuffer(AT91S_USART *usart, void *buffer, unsigned int size) {
+
+  // Check if the first PDC bank is free
+  if ((usart->US_TCR == 0) && (usart->US_TNCR == 0)) {
+    usart->US_TPR = (unsigned int) buffer;
+    usart->US_TCR = size;
+    usart->US_PTCR = AT91C_PDC_TXTEN;
+    return size;
+  } else if (usart->US_TNCR == 0) {
+    usart->US_TNPR = (unsigned int) buffer;
+    usart->US_TNCR = size;
+    return size; // return *buffer here
+  } else {
+    return EOF;
+  }
+}
+
+#ifdef USART_DMA
+void USART_DMAFixRxPointers(AT91S_USART *usart) {
+  int i = MAX_CHARBUF - 1;
+  if (usart == AT91C_BASE_US0) {
+    __us0_rx_ptr = __us0_rx_ptr + 1;
+    if (unlikely(__us0_rx_ptr == &__us0_rxbuf[MAX_CHARBUF])) {
+      __us0_rx_ptr = &__us0_rxbuf[0];
+      while (i-- > -1) {
+        __us0_rxbuf[i] = 0;
+      }
+    }
+  } else if (usart == AT91C_BASE_US1) {
+    __us1_rx_ptr = __us1_rx_ptr + 1;
+    if (unlikely(__us1_rx_ptr == &__us1_rxbuf[MAX_CHARBUF])) {
+      __us1_rx_ptr = &__us1_rxbuf[0];
+      while (i-- > -1) {
+        __us1_rxbuf[i] = 0;
+      }
+    }
+  } // else if US1
+}
+#endif
 
 void USART_SetTransmitterEnabled(AT91S_USART *usart, uint8_t enabled)
 {
@@ -217,10 +316,10 @@ void USART_EnableInterrupts(AT91S_USART *usart, unsigned int filter)
 }
 
 void set_printf_us(AT91S_USART *usart) {
-  _usart_out_device = usart;
+  __usart_out_device = usart;
 }
 void  set_scanf_us(AT91S_USART *usart) {
-  _usart_in_device = usart;
+  __usart_in_device = usart;
 }
 
 bool USART_PDC_RxStatus(AT91S_USART *usart) {

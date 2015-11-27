@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 #define uint8_t unsigned char
+#define  int8_t char
 #define uint    unsigned int
 
 /* from kernel tree; include/linux/compiler.h */
@@ -32,6 +33,21 @@
 
 #define USART_RX_LED AT91B_LED2
 #define USART_TX_LED AT91B_LED1
+
+#define USART_DMA
+#ifdef USART_DMA
+#define MAX_CHARBUF 100
+extern char __us0_rxbuf[MAX_CHARBUF + 1];
+extern char *__us0_rx_ptr;
+extern char *__us0_buf_head;
+
+extern char __us1_rxbuf[MAX_CHARBUF + 1];
+extern char *__us1_rx_ptr;
+extern char *__us1_buf_head;
+
+extern uint8_t __init_us0_endrx_irq;
+extern uint8_t __init_us1_endrx_irq;
+#endif
 
 void delay_ms(unsigned int n);
 
@@ -55,8 +71,8 @@ void AIC_Init( void );
 
 /* u(s)art functions */
 void    USART_Configure(AT91S_USART *usart, uint mode, uint baudrate, uint masterClock);
-uint8_t USART_read(AT91S_USART *usart);
-size_t  USART_write(AT91S_USART *usart, uint8_t c);
+int     USART_read(AT91S_USART *usart);
+int     USART_write(AT91S_USART *usart, int *c, int size);
 void    USART_SetTransmitterEnabled(AT91S_USART *usart, uint8_t enabled);
 void    USART_SetReceiverEnabled(AT91S_USART *usart, uint8_t enabled);
 void    USART_SetRecieverTimeout(AT91S_USART *usart, unsigned int timeout);
@@ -65,11 +81,16 @@ void    USART_DisableInterrupts(AT91S_USART *usart, unsigned int filter);
 void    USART_EnableInterrupts(AT91S_USART *usart, unsigned int filter);
 bool    USART_PDC_RxStatus(AT91S_USART *usart);
 bool    USART_PDC_TxStatus(AT91S_USART *usart);
+int     USART_ReadBuffer(AT91S_USART *usart, void *buffer, unsigned int size);
+int     USART_WriteBuffer(AT91S_USART *usart, void *buffer, unsigned int size);
+#ifdef USART_DMA
+void    USART_DMAFixRxPointers(AT91S_USART *usart);
+#endif
 /* u(s)art functions (end) */
 
 /* u(s)art helpers */
-extern AT91S_USART  *_usart_in_device;
-extern AT91S_USART *_usart_out_device;
+extern AT91S_USART  *__usart_in_device;
+extern AT91S_USART *__usart_out_device;
 void set_printf_us(AT91S_USART *usart);
 void  set_scanf_us(AT91S_USART *usart);
 /* u(s)art helpers (end) */
