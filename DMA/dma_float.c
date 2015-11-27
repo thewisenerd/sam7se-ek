@@ -3,8 +3,9 @@
 
 #include "../AT91SAM7SELib.h"
 
-float t_val = 0;
-float *ptr = &t_val;
+#define MAX_CHARBUF 10
+float t_val[MAX_CHARBUF + 1] = {0};
+float *ptr = t_val;
 
 uint8_t __init_us0_endrx_irq = 0;
 
@@ -30,13 +31,17 @@ void usart0_handler(void) {
 
   if ((status & AT91C_US_ENDRX) == AT91C_US_ENDRX) {
     if (likely(__init_us0_endrx_irq)) {
-      printf("%f\n", t_val); 
-      USART_ReadBuffer(AT91C_BASE_US0, ptr, 4); // init read?
+      printf("%f\n", *ptr);
+      ptr = ptr + 1;
+      if (unlikely(ptr == &t_val[MAX_CHARBUF])) {
+        ptr = &t_val[0];
+      }
     } else {
       // do not do anything at first interrupt
-      __init_us0_endrx_irq = 1;
+      __init_us0_endrx_irq++;
     }
-  }
+    USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
+  } // if
 }
 
 void ConfigureUsart0( void ) {
@@ -105,7 +110,8 @@ int main(void) {
   ConfigureUsart0(); // configure usart0
 
   // initial read to get things rolling
-  USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
+  /* we are bombarded with endrx int. do not add extra */
+  // USART_ReadBuffer(AT91C_BASE_US0, ptr, 4);
 
   // infinity
   while (1);
