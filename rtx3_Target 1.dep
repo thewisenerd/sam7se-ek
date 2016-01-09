@@ -1,0 +1,10 @@
+Dependencies for Project 'rtx3', Target 'Target 1': (DO NOT MODIFY !)
+F (.\SAM7.s)(0x5690234C)(--cpu ARM7TDMI --pd "__RTX SETA 1" --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Atmel\SAM7SE--list .\sam7.lst --xref -o .\sam7.o --depend .\sam7.d)
+F (.\main.c)(0x56901529)(-c --cpu ARM7TDMI -D__RTX -D__EVAL -g -O0 --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Atmel\SAM7SE-o .\main.o --omf_browse .\main.crf --depend .\main.d)
+I (C:\Keil\ARM\RV31\INC\RTL.h)(0x532C1630)
+I (inc/AT91SAM7SE512.h)(0x568FF7B5)
+I (inc/AT91SAM7SE-EK.h)(0x568FA83C)
+F (.\RTX_Config.c)(0x568D9C57)(-c --cpu ARM7TDMI -D__RTX -D__EVAL -g -O0 --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Atmel\SAM7SE-o .\rtx_config.o --omf_browse .\rtx_config.crf --depend .\rtx_config.d)
+I (C:\Keil\ARM\RV31\INC\RTL.h)(0x532C1630)
+I (C:\Keil\ARM\Inc\Atmel\SAM7SE\AT91SAM7SE512.H)(0x568FF7B5)
+I (C:\Keil\ARM\RV31\INC\RTX_lib.c)(0x532C1630)

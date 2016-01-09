@@ -1,0 +1,9 @@
+--cpu ARM7TDMI
+".\sam7.o"
+".\main.o"
+".\rtx_config.o"
+C:\Keil\ARM\RV31\LIB\RTX_ARM_L.LIB
+--strict --scatter ".\rtx3.sct"
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\rtx3.map" -o .\rtx3.axf
